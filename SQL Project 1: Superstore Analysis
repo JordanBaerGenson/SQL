@@ -30,7 +30,7 @@ VALUES
     
 -- © Copyright 2025 Break Into Tech  --
 
-#For this project, I used SQL to query the Superstore database to get information about items sold at the store and their prices. See each of the  projects 4 prompts below.
+#For this project, I used SQL to query the Superstore database to get information about items sold at the store and their prices. See each of the  project's 4 prompts below.
 
 -- QUERY 1: Used to learn column names.
 SELECT *
