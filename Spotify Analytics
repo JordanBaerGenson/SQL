@@ -1,0 +1,48 @@
+-- For this project, I downloaded Spotify data from Kaggle.
+-- Then I created a table to insert Spotify data into.
+-- Finally, I performed analytics on the data using SQL. 
+
+-- Creating the table: 
+CREATE TABLE BIT_DB.Spotifydata (
+id integer PRIMARY KEY,
+artist_name varchar NOT NULL,
+track_name varchar NOT NULL,
+track_id varchar NOT NULL,
+popularity integer NOT NULL,
+danceability decimal(4,3) NOT NULL,
+energy decimal(4,3) NOT NULL,
+key integer NOT NULL,
+loudness decimal(5,3) NOT NULL,
+mode integer NOT NULL,
+speechiness decimal(5,4) NOT NULL,
+acousticness decimal(6,5) NOT NULL,
+instrumentalness text NOT NULL,
+liveness decimal(5,4) NOT NULL,
+valence decimal(4,3) NOT NULL,
+tempo decimal(6,3) NOT NULL,
+duration_ms integer NOT NULL,
+time_signature integer NOT NULL 
+)
+
+-- Then I inserted the Spotify Data .csv into the table.
+
+-- Next, I explored the data using the following SQL to ask/answer the following questions: 
+
+--Question 1: Which artist has the longest song and what is the track id and name?
+SELECT artist_name, track_name, track_id, duration_ms
+FROM Spotifydata
+ORDER BY duration_ms desc
+LIMIT 1;
+
+--Question 2: Determine the average danceability and energy of the top 10 most popular tracks and display the artist as well. 
+SELECT artist_name, track_name, AVG(danceability), AVG(energy), popularity
+FROM Spotifydata
+GROUP BY artist_name, track_name
+ORDER BY popularity desc
+LIMIT 10;
+
+--Question 3: List all of the track_names and track_ids for all artists whose name begins with a D ordered by shortest to longest tracks. Display the length of tracks as well.
+SELECT artist_name, track_name, track_id, duration_ms
+FROM Spotifydata
+WHERE artist_name LIKE 'D%'
+ORDER BY duration_ms ASC;
