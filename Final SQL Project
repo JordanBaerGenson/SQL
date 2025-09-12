@@ -1,0 +1,247 @@
+-- For this project, I downloaded the below chinook data to SQLiteStudio.
+-- Then, I performed analytics on the data using SQL to answer the below provided questions and then created three of my own questions to answer.
+
+--Data set used for this project below:
+// Chinook database diagram
+// Break Into Tech 
+
+// Create Tables
+Table media_types [headercolor: #625DEC] {
+  MediaTypeId integer [pk]
+  Name nvarchar(120)
+}
+
+Table genres [headercolor: #625DEC]{
+  GenreId integer [pk]
+  Name nvarchar(120)
+}
+
+Table artists [headercolor: #625DEC]{
+  ArtistId integer [pk]
+  Name nvarchar(120)
+}
+
+Table albums [headercolor: #625DEC]{
+  AlbumId integer [pk]
+  Title nvarchar(160)
+  ArtistId integer
+}
+
+Table tracks [headercolor: #625DEC] {
+  TrackId integer [pk]
+  Name nvarchar(200)
+  AlbumId integer
+  MediaTypeId integer
+  GenreId integer
+  Composer nvarchar(220)
+  Milliseconds integer
+  Bytes integer
+  UnitPrice numeric
+}
+
+Table playlists [headercolor: #625DEC]{
+  PlaylistId integer [pk]
+  Name nvarchar(120)
+}
+
+Table playlist_track [headercolor: #625DEC]{
+  PlaylistId integer [pk]
+  TrackId integer [pk]
+}
+
+Table customers [headercolor: #625DEC]{
+  CustomerId integer [pk]
+  FirstName nvarchar(40)
+  LastName nvarchar(20)
+  Company nvarchar(80)
+  Address nvarchar(70)
+  City nvarchar(40)
+  State nvarchar(40)
+  Country nvarchar(40)
+  PostalCode nvarchar(10)
+  Phone nvarchar(24)
+  Fax nvarchar(24)
+  Email nvarchar(60)
+  SupportRepId integer
+}
+
+Table employees [headercolor: #625DEC]{
+  EmployeeId integer [pk]
+  LastName nvarchar(20)
+  FirstName nvarchar(20)
+  Title nvarchar(30)
+  ReportsTo integer
+  BirthDate datetime
+  HireDate datetime
+  Address nvarchar(70)
+  City nvarchar(40)
+  State nvarchar(40)
+  Country nvarchar(40)
+  PostalCode nvarchar(10)
+  Phone nvarchar(24)
+  Fax nvarchar(24)
+  Email nvarchar(60)
+}
+
+Table invoices [headercolor: #625DEC]{
+  InvoiceId integer [pk]
+  CustomerId integer
+  InvoiceDate datetime
+  BillingAddress nvarchar(70)
+  BillingCity nvarchar(40)
+  BillingState nvarchar(40)
+  BillingCountry nvarchar(40)
+  BillingPostalCode nvarchar(10)
+  Total numeric
+}
+
+Table invoice_items [headercolor: #625DEC]{
+  InvoiceLineId integer [pk]
+  InvoiceId integer
+  TrackId integer
+  UnitPrice numeric
+  Quantity integer
+}
+
+// Relationships
+
+Ref: albums.ArtistId > artists.ArtistId
+Ref: tracks.AlbumId > albums.AlbumId
+Ref: tracks.MediaTypeId > media_types.MediaTypeId
+Ref: tracks.GenreId > genres.GenreId
+Ref: playlist_track.PlaylistId > playlists.PlaylistId
+Ref: playlist_track.TrackId > tracks.TrackId
+Ref: invoices.CustomerId > customers.CustomerId
+Ref: invoice_items.InvoiceId > invoices.InvoiceId
+Ref: invoice_items.TrackId > tracks.TrackId
+Ref: customers.SupportRepId > employees.EmployeeId
+Ref: employees.ReportsTo > employees.EmployeeId
+
+
+
+--Provided Questions: 
+
+--1. Show Customers (their full names, customer ID, and country) who are not in the US. (Hint: != or <> can be used to say "is not equal to").
+SELECT customers.FirstName, customers.LastName, customers.CustomerId, customers.country
+FROM chinook.customers
+WHERE customers.country <> 'USA';
+
+--2. Show only the Customers from Brazil.
+SELECT *
+FROM chinook.customers
+WHERE customers.country ='Brazil';
+
+--3. Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+SELECT cust.FirstName, cust.LastName, inv.invoiceId, inv.InvoiceDate, inv.BillingCountry
+FROM chinook.invoices as inv
+LEFT JOIN chinook.customers as cust
+ON inv.customerId=cust.CustomerId
+WHERE inv.BillingCountry ='Brazil';
+
+--4. Show the Employees who are Sales Agents.
+SELECT *
+FROM chinook.employees
+WHERE employees.Title = 'Sales Support Agent';
+
+--5. Find a unique/distinct list of billing countries from the Invoice table.
+SELECT DISTINCT invoices.BillingCountry
+FROM chinook.invoices;
+
+--6. Provide a query that shows the invoices associated with each sales agent. The resulting table should include the Sales Agent's full name.
+SELECT employees.FirstName, employees.LastName, invoices.invoiceId
+FROM chinook.employees
+JOIN chinook.customers
+ON employees.EmployeeID=customers.SupportRepId
+JOIN chinook.invoices
+ON customers.CustomerId=invoices.CustomerID;
+
+--7. Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+SELECT customers.FirstName, customers.LastName, employees.FirstName AS SalesAgentFirstName, employees.LastName AS SalesAgentLastName, invoices.total, customers.Country
+FROM chinook.invoices
+JOIN chinook.customers
+ON invoices.CustomerId=customers.CustomerId
+JOIN chinook.employees
+ON customers.SupportRepId=employees.EmployeeId;
+
+--8. How many Invoices were there in 2009?
+SELECT COUNT (*)
+FROM chinook.invoices
+WHERE invoices.InvoiceDate LIKE '2009%';
+
+--9. What are the total sales for 2009?
+SELECT SUM(invoices.total)
+FROM chinook.invoices
+WHERE invoices.InvoiceDate LIKE '2009%';
+
+--10. Write a query that includes the purchased track name with each invoice line ID.
+SELECT tracks.Name, invoice_items.InvoiceLineId
+FROM chinook.tracks
+JOIN chinook.invoice_items
+ON tracks.TrackId = invoice_items.TrackId;
+
+--11. Write a query that includes the purchased track name AND artist name with each invoice line ID.
+SELECT artists.name AS Artist, tracks.Name AS Track, invoice_items.InvoiceLineId
+FROM chinook.invoice_items
+LEFT JOIN chinook.tracks 
+ON invoice_items.TrackId = tracks.TrackId
+INNER JOIN chinook.albums
+ON tracks.AlbumId = albums.AlbumId
+LEFT JOIN chinook.artists
+ON albums.artistId=artists.ArtistID;
+
+--12. Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+SELECT tracks.name AS 'Track Name', albums.title AS 'Album Name', media_types.Name AS 'Media Type', genres.Name AS 'Genre'
+FROM chinook.tracks
+JOIN chinook.albums
+ON tracks.AlbumId = albums.AlbumId
+JOIN chinook.media_types
+ON media_types.MediaTypeId=tracks.MediaTypeId
+JOIN chinook.genres
+ON tracks.GenreId=genres.GenreId;
+
+--13. Show the total sales made by each sales agent.
+SELECT employees.FirstName, employees.LastName, SUM(invoices.Total) AS 'Total Sales'
+FROM chinook.employees
+JOIN chinook.customers
+ON employees.EmployeeId=customers.SupportRepId
+JOIN chinook.invoices
+ON invoices.CustomerId=customers.CustomerId
+WHERE employees.Title = 'Sales Support Agent'
+GROUP BY employees.EmployeeId;
+
+--14. Which sales agent made the most dollars in sales in 2009?
+SELECT employees.FirstName, employees.LastName, ROUND(SUM(invoices.Total), 2) AS 'Total Sales'
+FROM chinook.employees
+JOIN chinook.customers
+ON employees.EmployeeId=customers.SupportRepId
+JOIN chinook.invoices
+ON invoices.CustomerId=customers.CustomerId
+WHERE employees.Title = 'Sales Support Agent'
+AND invoices.InvoiceDate LIKE '2009%'
+GROUP BY employees.EmployeeId
+ORDER BY (ROUND(SUM(invoices.Total), 2)) DESC
+LIMIT 1;
+
+--My Own Questions:
+--1. Show all of the Play List names and id that have the track with TrackId 5 on it, as well as the name of the track with track ID 5.
+SELECT tracks.Name AS 'Track Title', playlists.Name AS 'Playlist Name', playlists.PlaylistId
+FROM chinook.tracks
+JOIN chinook.playlist_track
+ON tracks.TrackId=playlist_track.TrackId
+JOIN chinook.playlists
+ON playlist_track.PlaylistId=playlists.PlaylistId
+WHERE tracks.TrackId= 5;
+
+--2. What was the average total for invoices in 2010
+SELECT ROUND (AVG(invoices.Total), 2) AS 'Average Total for 2010 Invoices'
+FROM chinook.invoices
+WHERE invoices.InvoiceDate LIKE '2010%';
+
+--3. What are the Top 5 shortest songs and how many times have they each been purchased? Display the track ID, track title, milliseconds, and total times each was purchased.
+SELECT tracks.TrackId, tracks.Name AS 'Track Title', tracks.Milliseconds, COUNT(invoice_items.quantity) AS 'Total Times Purchased'
+FROM chinook.tracks
+JOIN chinook.invoice_items
+ON tracks.TrackId=invoice_items.TrackId
+GROUP BY invoice_items.TrackId
+ORDER BY tracks.Milliseconds ASC
+LIMIT 5;
